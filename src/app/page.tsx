@@ -40,9 +40,20 @@ export default function Home() {
         const timer = setTimeout(() => { setSettings(restored); setSave(enabled); setStorageError(warning); setReady(true); }, 0);
         return () => clearTimeout(timer);
     }, []);
-    useEffect(() => { if (!ready || composing)
-        return; const timer = setTimeout(() => { setSettled(true); if (!Object.keys(validate(settings)).length)
-        regenerate(settings); }, delay.current); generationTimer.current = timer; return () => clearTimeout(timer); }, [settings, ready, composing]);
+    useEffect(() => {
+        if (!ready || composing) return;
+        const timer = setTimeout(() => {
+            setSettled(true);
+            if (Object.keys(validate(settings)).length) {
+                setPasswords([]);
+                setMessages({});
+            } else {
+                regenerate(settings);
+            }
+        }, delay.current);
+        generationTimer.current = timer;
+        return () => clearTimeout(timer);
+    }, [settings, ready, composing]);
     useEffect(() => {
         if (!ready || !save || composing)
             return;
@@ -54,7 +65,17 @@ export default function Home() {
             return () => clearTimeout(timer);
         }
     }, [settings, save, ready, composing]);
-    function update(patch: Partial<Settings>, immediate = false) { delay.current = immediate ? 0 : 200; version.current++; setPasswords([]); setMessages({}); setFailure(''); setSettled(false); setSettings(s => ({ ...s, ...patch })); }
+    function update(patch: Partial<Settings>, immediate = false) {
+        clearTimeout(generationTimer.current);
+        delay.current = immediate ? 0 : 200;
+        version.current++;
+        // Exclusion edits retain the existing inputs until validation/generation finishes.
+        if (patch.excluded === undefined) setPasswords([]);
+        setMessages({});
+        setFailure('');
+        setSettled(false);
+        setSettings(s => ({ ...s, ...patch }));
+    }
     function beginSlider() {
         sliderActive.current = true;
         clearTimeout(generationTimer.current);
@@ -133,7 +154,7 @@ export default function Home() {
    <fieldset><legend>パスワードに使用する文字種</legend><div className="choices">{(Object.keys(GROUPS) as Group[]).map(g => <label className={`choice ${settings.groups.includes(g) ? 'selected' : ''}`} key={g}><input type="checkbox" checked={settings.groups.includes(g)} disabled={!ready} onChange={e => update({ groups: e.target.checked ? [...settings.groups, g] : settings.groups.filter(v => v !== g) }, true)} aria-describedby={visibleError('groups') ? 'groups-error' : undefined}/><span>{GROUPS[g].label}<small>{GROUPS[g].hint}</small></span></label>)}</div>{error('groups')}</fieldset>
    <details><summary>記号選択時に使う文字を確認</summary><code>{GROUPS.symbols.chars}</code><p>空白は含みません。使用禁止文字に入力した記号は除外します。</p></details>
    <label className="check-line"><input type="checkbox" checked={settings.required} disabled={!ready} onChange={e => update({ required: e.target.checked }, true)}/>選択した文字種をそれぞれ1文字以上含める</label>
-   <div className="field excluded"><label htmlFor="excluded">使用禁止文字 <span className="optional">任意</span></label><input id="excluded" type="text" value={settings.excluded} disabled={!ready} autoComplete="off" spellCheck={false} onCompositionStart={() => { version.current++; setComposing(true); setSettled(false); setPasswords([]); setMessages({}); }} onCompositionEnd={() => setComposing(false)} onChange={e => update({ excluded: e.target.value })} aria-invalid={visibleError('excluded')} aria-describedby={`excluded-help${visibleError('excluded') ? ' excluded-error' : ''}`}/><p className="hint" id="excluded-help">入力した文字を除外します。区切り文字は不要で、大文字・小文字は区別します。</p>{error('excluded')}</div>
+   <div className="field excluded"><label htmlFor="excluded">使用禁止文字 <span className="optional">任意</span></label><input id="excluded" type="text" value={settings.excluded} disabled={!ready} autoComplete="off" spellCheck={false} onCompositionStart={() => { clearTimeout(generationTimer.current); version.current++; setComposing(true); setSettled(false); setMessages({}); }} onCompositionEnd={() => setComposing(false)} onChange={e => update({ excluded: e.target.value })} aria-invalid={visibleError('excluded')} aria-describedby={`excluded-help${visibleError('excluded') ? ' excluded-error' : ''}`}/><p className="hint" id="excluded-help">入力した文字を除外します。区切り文字は不要で、大文字・小文字は区別します。</p>{error('excluded')}</div>
    <div className="save-area"><label className="check-line"><input type="checkbox" checked={save} disabled={!ready} onChange={e => toggleSave(e.target.checked)}/>このブラウザーに生成条件を保存する</label><p className="hint">保存するのは条件だけです。パスワードは保存しません。</p>{storageError && <p className="error" role="status">{storageError}</p>}</div>
   </section>
   <section className="results" aria-label="生成されたパスワード">
