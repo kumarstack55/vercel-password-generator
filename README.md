@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# パスワード生成
 
-## Getting Started
+ブラウザー内で生成する、静的な Next.js アプリです。パスワード生成用のAPI・データベース・外部フォント・解析SDKは使用しません。生成にはブラウザーのWeb Crypto APIを使用します。
 
-First, run the development server:
+## 開発と検証
 
-```bash
+```sh
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm test
+npm run lint
+npm run build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+`npm run build` は `out/` に静的ファイルを出力します。Vercelなどの静的ホスティングで配信できます。ローカル開発には `npm run dev` を使います。`package.json` に残っている `npm start`（`next start`）は、この静的エクスポート構成では使用できません。本番成果物は `out/` を静的Webサーバーで配信してください。コピー機能にはHTTPSまたはlocalhostと、ブラウザーによるクリップボードへの書き込み許可が必要です。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 仕様
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- 文字数：1〜128の整数、初期値64。生成個数：10個固定（入力不要）。
+- 英大文字・英小文字・数字・空白を除くASCII記号32文字を選択可能。初期状態では英大文字・英小文字・数字を選択し、記号は未選択。
+- 使用禁止文字は初期値が空で、区切りなし、大文字小文字を区別。重複した文字を入力しても除外結果は変わりません。生成候補にない文字は影響しません。
+- 各文字種を1文字以上含める設定は初期状態で有効。無効にすると、選択した文字種が結果に含まれない場合があります。
+- 結果は読み取り専用input。フォーカス時に全文選択でき、行ごとのコピーも可能。コピー成功表示は約2秒間で消え、失敗時は手動コピーを案内します。
+- 同じ文字の繰り返し、および生成結果同士の重複を許容します。
 
-## Learn More
+### 自動生成と入力エラー
 
-To learn more about Next.js, take a look at the following resources:
+- 初回表示では保存した条件を読み込んだ後、有効な条件なら新しいパスワードを生成します。
+- スライダー操作中は数字入力の表示だけを同期し、既存の結果を保持します。ポインター・値変更キーを離すか、フォーカスを外すと条件を確定して再生成します。ポインター操作の中断・キャプチャ解除時にも現在値を確定します。有効な条件での更新では結果一覧を空にせず置き換えます。
+- 数字入力・使用禁止文字は最後の変更から約200ms後、文字種・必須設定のチェックボックスは変更直後に生成します。これらの変更時は既存の結果を消去します。使用禁止文字の日本語変換中は生成を待ちます。
+- 条件保存のチェックを切り替えても再生成しません。一覧の後の「パスワードを再生成」ボタンでは、同じ条件で生成し直します。
+- 文字数が範囲外・整数でない場合、文字種が未選択の場合、除外後に候補がない場合、必須文字種の候補がなくなる場合、文字数が必須文字種数より少ない場合は生成しません。項目の近くに理由を表示し、再生成ボタンを無効にします。
+- 数字入力の空欄はフォーカスが外れてからエラーを表示します。条件を修正すると自動生成します。
+- 乱数取得など生成処理自体の失敗時は結果を消し、再試行を案内します。
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 条件の保存と復元
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- 保存済みの条件がない場合、条件保存は無効です。有効にすると `localStorage` の `password-generator.settings.v1` に文字数・文字種・必須設定・使用禁止文字だけを保存します。
+- 無効にすると、このキーのデータを削除します。画面上の条件と結果は残り、その後の条件変更は保存しません。他のサイトデータには触れません。読み込み・保存・削除に失敗した場合は画面に案内を表示します。
+- 保存済みの条件があれば保存を有効にして復元します。過去の生成個数フィールドは無視し、常に10個生成します。
+- 保存対象には入力途中や生成できない条件も含まれます。復元時にデータ形式が不正なら初期値を使い、形式は正しいが生成条件が成立しない場合は入力エラーを表示します。
+- 生成結果やコピー履歴は保存・送信しません。再読み込み時に過去のパスワードを復元することもありません。
 
-## Deploy on Vercel
+## 生成方法
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+`src/lib/password.ts` にUIから独立した検証と生成処理を置いています。各パスワードを次の順に生成します。
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+除外文字を取り除いた候補を文字種ごとに用意します。必須設定が無効で候補が空になった文字種は、割り振り対象から外します。
+
+1. パスワードごとに文字種別の文字数を決めます。必須設定が有効なら各文字種に1文字ずつ確保し、残りは文字種を等確率で選んで割り振ります。
+2. 文字種ごとに、除外後の候補から必要な文字数をランダムに取り出します（同じ文字の繰り返しを許容）。
+3. Fisher–Yates法で文字の順序をシャッフルします。
+
+すべての乱数にWeb Cryptoを使い、整数への変換では棄却法で剰余による偏りを避けます。ただし、この生成方法は文字種ごとに文字数を割り振るため、有効なパスワード全体を均等な確率で選ぶものではありません。
+
+ブラウザーのメモリー管理・ページ復元やOSのクリップボード履歴は、アプリによる保存とは別です。乱数取得に失敗した場合は生成を中止し、別の乱数源へフォールバックしません。
