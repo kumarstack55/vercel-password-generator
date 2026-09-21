@@ -14,6 +14,24 @@ npm run build
 
 `npm run build` は `out/` に静的ファイルを出力します。Vercelなどの静的ホスティングで配信できます。ローカル開発には `npm run dev` を使います。`package.json` に残っている `npm start`（`next start`）は、この静的エクスポート構成では使用できません。本番成果物は `out/` を静的Webサーバーで配信してください。コピー機能にはHTTPSまたはlocalhostと、ブラウザーによるクリップボードへの書き込み許可が必要です。
 
+## GitHub Pages への公開
+
+1. GitHub のリポジトリで **Settings → Pages → Build and deployment → Source** を **GitHub Actions** に設定します。
+2. この変更を `main` に push すると、`.github/workflows/pages.yml` がテスト・Lint・ビルドを実行して `out/` を公開します。Actions の **Deploy to GitHub Pages → Run workflow** から手動実行もできます。
+3. デプロイ成功後、<https://kumarstack55.github.io/vercel-password-generator/> でアクセスできます（カスタムドメイン未設定の場合）。
+
+Pages の公開パスをビルド時に `PAGES_BASE_PATH` で渡すため、JavaScript・CSS・favicon もリポジトリ配下から読み込まれます。Vercel とローカルではこの環境変数を設定せず、従来どおりルートで配信します。カスタムドメインでは Pages が返すパスに自動で追従します。
+
+Pages 向けのビルドをローカルで確認する場合（PowerShell）：
+
+```powershell
+$env:PAGES_BASE_PATH = '/vercel-password-generator'
+npm run build
+Remove-Item Env:PAGES_BASE_PATH
+```
+
+この成果物は `/vercel-password-generator/` 配下で配信してください。通常のルート配信用に戻す場合は、環境変数を解除して再ビルドします。
+
 ## 仕様
 
 - 文字数：1〜128の整数、初期値64。生成個数：10個固定（入力不要）。
