@@ -1,2 +1,5 @@
 ---
 default: true
+
+# MD013: 行の長さの制限を無効にする
+MD013: false
