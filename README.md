@@ -2,6 +2,18 @@
 
 ブラウザー内で生成する、静的な Next.js アプリです。パスワード生成用のAPI・データベース・外部フォント・解析SDKは使用しません。生成にはブラウザーのWeb Crypto APIを使用します。
 
+## 利用
+
+- <https://vercel-password-generator-nu.vercel.app/>
+
+## 開発要件
+
+- [fnm](https://github.com/Schniz/fnm)
+- [actionlint](https://github.com/rhysd/actionlint/blob/main/docs/install.md)
+- Visiual Studio Code
+  - Extensions
+    - [markdownlint](https://marketplace.visualstudio.com/items?itemName=DavidAnson.vscode-markdownlint)
+
 ## 開発と検証
 
 ```sh
@@ -11,6 +23,8 @@ npm test
 npm run lint
 npm run build
 ```
+
+`npm run lint` は ESLint と actionlint による GitHub Actions ワークフローの検証を実行します。個別に実行する場合は `npm run lint:eslint` / `npm run lint:actions` を使います。
 
 `npm run build` は `out/` に静的ファイルを出力します。Vercelなどの静的ホスティングで配信できます。ローカル開発には `npm run dev` を使います。`package.json` に残っている `npm start`（`next start`）は、この静的エクスポート構成では使用できません。本番成果物は `out/` を静的Webサーバーで配信してください。コピー機能にはHTTPSまたはlocalhostと、ブラウザーによるクリップボードへの書き込み許可が必要です。
 

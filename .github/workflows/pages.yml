@@ -26,6 +26,13 @@ jobs:
         uses: actions/configure-pages@v5
       - run: npm ci
       - run: npm test
+      - name: Install actionlint
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/actionlint"
+          curl -fsSL https://raw.githubusercontent.com/rhysd/actionlint/v1.7.12/scripts/download-actionlint.bash -o "$RUNNER_TEMP/download-actionlint.bash"
+          bash "$RUNNER_TEMP/download-actionlint.bash" 1.7.12 "$RUNNER_TEMP/actionlint"
+          echo "$RUNNER_TEMP/actionlint" >> "$GITHUB_PATH"
       - run: npm run lint
       - run: npm run build
         env:
