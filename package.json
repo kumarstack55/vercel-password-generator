@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "npm run lint:eslint && npm run lint:actions && npm run lint:markdown",
+    "lint": "npm run lint:eslint && npm run lint:actions && npm run lint:markdown && npm run format:check",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "lint:eslint": "eslint",
     "lint:actions": "actionlint",
     "lint:markdown": "markdownlint-cli2",
@@ -24,7 +26,9 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.5",
+    "eslint-config-prettier": "10.1.8",
     "markdownlint-cli2": "^0.23.3",
+    "prettier": "3.9.8",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

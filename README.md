@@ -13,6 +13,7 @@
 - Visiual Studio Code
   - Extensions
     - [markdownlint](https://marketplace.visualstudio.com/items?itemName=DavidAnson.vscode-markdownlint)
+    - [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
 
 ## 開発と検証
 
@@ -24,9 +25,12 @@ npm run lint
 npm run build
 ```
 
-`npm run lint` は ESLint、actionlint、markdownlint による検証を実行します。
+`npm run lint` は ESLint、actionlint、markdownlint による検証と Prettier のフォーマットチェックを実行します。
 個別に実行する場合は `npm run lint:eslint` / `npm run lint:actions` / `npm run lint:markdown` を使います。
 markdownlint は `npm install` で導入され、VS Code と共通の `.markdownlint.yml` を使います。
+
+`npm run format` で Prettier によるフォーマット、`npm run format:check` で変更を加えずにチェックできます。
+VS Code では推奨の Prettier 拡張機能をインストールすると保存時にもフォーマットされます。
 
 `npm run build` は `out/` に静的ファイルを出力します。Vercelなどの静的ホスティングで配信できます。ローカル開発には `npm run dev` を使います。`package.json` に残っている `npm start`（`next start`）は、この静的エクスポート構成では使用できません。本番成果物は `out/` を静的Webサーバーで配信してください。コピー機能にはHTTPSまたはlocalhostと、ブラウザーによるクリップボードへの書き込み許可が必要です。
 
