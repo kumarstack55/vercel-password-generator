@@ -6,9 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "npm run lint:eslint && npm run lint:actions",
+    "lint": "npm run lint:eslint && npm run lint:actions && npm run lint:markdown",
     "lint:eslint": "eslint",
     "lint:actions": "actionlint",
+    "lint:markdown": "markdownlint-cli2",
     "test": "node --test tests/*.test.mjs"
   },
   "dependencies": {
@@ -23,6 +24,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.5",
+    "markdownlint-cli2": "^0.23.3",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
