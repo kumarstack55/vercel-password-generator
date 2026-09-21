@@ -1,0 +1,7 @@
+globs:
+  - "**/*.{md,markdown}"
+ignores:
+  - "node_modules/**"
+  - ".git/**"
+  - ".next/**"
+  - "out/**"
